@@ -1,0 +1,28 @@
+# build output
+dist/
+
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# environment variables
+.env
+.env.production
+
+# macOS-specific files
+.DS_Store
+
+# jetbrains setting folder
+.idea/
+
+# local paper sources used for drafting (not needed for website deploy)
+WACV_2026_tex_source_file/
+WACV 26 - 1218 CR - Xpress Validated.pdf

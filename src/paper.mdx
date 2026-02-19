@@ -1,0 +1,163 @@
+---
+title: "Diffusion-Based Authentication of Copy Detection Patterns: A Multimodal Framework with Printer Signature Conditioning"
+authors:
+  - name: Bolutife Atoki
+    url: https://example.com/authors/bolutife-atoki
+    institution: Universite Lumiere Lyon 2, CNRS, INSA Lyon, Universite Claude Bernard Lyon 1, LIRIS
+  - name: Iuliia Tkachenko
+    url: https://example.com/authors/iuliia-tkachenko
+    institution: Universite Lumiere Lyon 2, CNRS, INSA Lyon, Universite Claude Bernard Lyon 1, LIRIS
+  - name: Bertrand Kerautret
+    url: https://example.com/authors/bertrand-kerautret
+    institution: Universite Lumiere Lyon 2, CNRS, INSA Lyon, Universite Claude Bernard Lyon 1, LIRIS
+  - name: Carlos Crispim-Junior
+    url: https://example.com/authors/carlos-crispim-junior
+    institution: Universite Lumiere Lyon 2, CNRS, INSA Lyon, Universite Claude Bernard Lyon 1, LIRIS
+conference: IEEE/CVF Winter Conference on Applications of Computer Vision (WACV) 2026
+links:
+  - name: Paper PDF
+    url: paper.pdf
+    icon: ri:file-pdf-2-line
+  - name: Code
+    url: https://gitlab.liris.cnrs.fr/anr-trustit/diffusion_based_cdp_authentication.git
+    icon: ri:github-line
+  - name: arXiv
+    url: https://example.com/arxiv
+    icon: academicons:arxiv
+  - name: Slides
+    url: https://example.com/slides
+    icon: ri:slideshow-2-line
+theme: light
+favicon: favicon.svg
+description: Diffusion-based CDP authentication with joint template, printed CDP, and printer-signature conditioning.
+---
+
+import HighlightedSection from "./components/HighlightedSection.astro";
+import Figure from "./components/Figure.astro";
+import Picture from "./components/Picture.astro";
+import Wide from "./components/Wide.astro";
+
+import illustration from "./assets/illustration.png";
+import scheme from "./assets/scheme.png";
+
+<HighlightedSection>
+
+## Abstract
+
+Counterfeiting affects diverse industries, including pharmaceuticals, electronics, and food, posing serious health and economic risks. Printable unclonable codes, such as Copy Detection Patterns (CDPs), are widely used as an anti-counterfeiting measure and are applied to products and packaging. However, the increasing availability of high-resolution printing and scanning devices, along with advances in generative deep learning, undermines traditional authentication systems, which often fail to distinguish high-quality counterfeits from genuine prints.
+
+In this work, we propose a diffusion-based authentication framework that jointly leverages the original binary template, the printed CDP, and a representation of printer identity that captures relevant semantic information. Formulating authentication as multi-class printer classification over printer signatures lets our model capture fine-grained, device-specific features via spatial and textual conditioning. We extend ControlNet by repurposing the denoising process for class-conditioned noise prediction, enabling effective printer classification.
+
+On the Indigo $1\times1$ Base dataset, our method outperforms traditional similarity metrics and prior deep learning approaches. Results show the framework generalizes to counterfeit types unseen during training.
+
+</HighlightedSection>
+
+## Problem Setting
+
+The framework authenticates a candidate CDP by checking whether its predicted printer identity matches the expected authentic printer identity. The model is conditioned on:
+
+1. The binary template.
+2. The printed CDP.
+3. A text description of printer identity.
+
+Authentication is then a decision over printer classes rather than a direct similarity threshold.
+
+$$
+\hat{c} = \arg\min_{c_i} \mathbb{E}_t \left[ \| \epsilon - f_\theta(x_t, t, z, c_i) \|_2^2 \right]
+$$
+
+A sample is accepted as authentic only if $\hat{c}=c^*$.
+
+## Visual Overview
+
+<Figure>
+  <Picture
+    slot="figure"
+    src={illustration}
+    alt="Binary template, authentic print, and counterfeit print examples"
+    priority
+  />
+  <Fragment slot="caption">
+    Examples of a binary template, authentic printed CDP, and counterfeit printed CDPs from traditional image processing and deep learning methods.
+  </Fragment>
+</Figure>
+
+<Wide>
+  <Figure>
+    <Picture
+      slot="figure"
+      src={scheme}
+      alt="Diffusion-based authentication pipeline with printer signature conditioning"
+    />
+    <Fragment slot="caption">
+      Proposed authentication pipeline: noised template latent + printed CDP latent + printer text conditioning, with class-wise noise prediction and minimum-error class selection.
+    </Fragment>
+  </Figure>
+</Wide>
+
+## Key Results
+
+### Method Comparison (Authentication Error)
+
+| Method | P_err | P_miss (HP55) | P_miss (HP76) | P_miss mean | P_fa (HP55_55) | P_fa (HP55_76) | P_fa (HP76_76) | P_fa (HP76_55) | P_fa mean |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| NCC | 0.286 | 0.292 | 0.310 | 0.301 | 0.300 | 0.361 | 0.264 | 0.201 | 0.273 |
+| SSIM | 0.275 | 0.264 | 0.300 | 0.281 | 0.292 | 0.285 | 0.292 | 0.210 | 0.269 |
+| Chaban et al. (retrained) | 0.091 | 0.125 | 0.111 | 0.118 | 0.097 | 0.160 | 0.000 | 0.000 | 0.064 |
+| **Ours** | **0.023** | **0.049** | **0.035** | **0.005** | **0.000** | **0.014** | 0.007 | **0.000** | **0.042** |
+
+### Classification Confusion Matrix (%)
+
+| Actual \\ Pred | HP55 | HP76 | HP55_55 | HP55_76 | HP76_76 | HP76_55 |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: |
+| HP55 | **95** | 5 | 0 | 0 | 0 | 0 |
+| HP76 | 3 | **97** | 0 | 0 | 0 | 0 |
+| HP55_55 | 0 | 0 | **83** | 15 | 1 | 1 |
+| HP55_76 | 1 | 0 | 14 | **83** | 1 | 1 |
+| HP76_76 | 0 | 1 | 1 | 1 | **89** | 8 |
+| HP76_55 | 0 | 0 | 2 | 2 | 19 | **77** |
+
+### Generalization to Unseen Counterfeits
+
+| Counterfeit type group | P_err | P_miss | P_fa |
+| :--- | ---: | ---: | ---: |
+| Known counterfeit | 0.012 | 0.024 | 0.000 |
+| Unknown counterfeit | 0.012 | 0.024 | 0.000 |
+
+### Binary Template Reconstruction (VAE)
+
+| Configuration | Avg. MSE |
+| :--- | ---: |
+| Pretrained VAE | 0.581 |
+| **Fine-tuned VAE** | **0.075** |
+
+### Ablation: Template Input
+
+| Input configuration | P_err | P_miss | P_fa |
+| :--- | ---: | ---: | ---: |
+| No template input | 0.660 | 0.430 | 0.200 |
+| **With template input** | **0.023** | **0.042** | **0.005** |
+
+### Ablation: Printer Identity Representation
+
+| Representation | P_err | P_miss | P_fa |
+| :--- | ---: | ---: | ---: |
+| Printer index-based | 0.521 | 0.962 | 0.082 |
+| Appearance-based text | 0.035 | 0.063 | **0.001** |
+| **Printer information text** | **0.023** | **0.042** | 0.005 |
+
+## Notes
+
+1. Author links, arXiv URL, and slides URL are placeholders and will be updated later.
+2. Code repository currently points to the private project repository and can be swapped once public links are finalized.
+
+## BibTeX
+
+```bibtex
+@inproceedings{atoki2026diffusioncdp,
+  title={Diffusion-Based Authentication of Copy Detection Patterns: A Multimodal Framework with Printer Signature Conditioning},
+  author={Atoki, Bolutife and Tkachenko, Iuliia and Kerautret, Bertrand and Crispim-Junior, Carlos},
+  booktitle={Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
+  year={2026}
+}
+```
