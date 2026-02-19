@@ -16,6 +16,7 @@ import { Content, frontmatter } from "../paper.mdx";
 interface Frontmatter {
   title: string;
   authors: Author[];
+  affiliation?: string;
   conference?: string;
   notes?: Note[];
   links?: Link[];
@@ -28,6 +29,7 @@ interface Frontmatter {
 const {
   title,
   authors,
+  affiliation,
   conference,
   notes,
   links,
@@ -82,21 +84,31 @@ const prefix = baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
   <body
     class="prose prose-lg prose-zinc dark:prose-invert prose-a:text-blue-500 prose-a:dark:text-blue-300 prose-a:no-underline prose-a:hover:underline prose-a:font-normal prose-code:bg-zinc-200 prose-code:dark:bg-zinc-800 prose-code:text-zinc-800 prose-code:dark:text-zinc-200 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-medium prose-code:before:content-none prose-code:after:content-none max-w-none pt-16 pb-6 font-(family-name:--font-noto-sans)"
   >
+    <div class="not-prose fixed top-4 right-4 z-50">
+      <button
+        id="theme-toggle"
+        type="button"
+        role="switch"
+        aria-checked="false"
+        aria-label="Switch to dark mode"
+        data-state="light"
+        class="group inline-flex items-center gap-3 rounded-full border border-zinc-300 bg-white/90 px-3 py-2 text-sm text-zinc-800 shadow-sm backdrop-blur transition-colors hover:bg-white dark:border-zinc-700 dark:bg-zinc-900/90 dark:text-zinc-100 dark:hover:bg-zinc-900"
+      >
+        <span class="font-medium">Theme</span>
+        <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-zinc-300 transition-colors group-data-[state=dark]:bg-zinc-700">
+          <span class="inline-block h-5 w-5 translate-x-0 rounded-full bg-white shadow transition-transform group-data-[state=dark]:translate-x-5"></span>
+        </span>
+      </button>
+    </div>
+
     <header class="mx-auto mb-12 max-w-[50rem] px-6 text-center">
       <h1 class="text-5xl font-medium">{title}</h1>
       <div class="flex flex-col items-center gap-6">
         <Authors authors={authors} />
+        {affiliation && <div>{affiliation}</div>}
         {conference && <div>{conference}</div>}
         {notes && <Notes notes={notes} />}
         {links && <Links links={links} />}
-        <button
-          id="theme-toggle"
-          type="button"
-          aria-pressed="false"
-          class="not-prose rounded-full border border-zinc-300 bg-white px-5 py-2 text-base font-normal text-zinc-900 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
-        >
-          Dark: Off
-        </button>
       </div>
     </header>
     <main>
@@ -121,8 +133,12 @@ const prefix = baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
 
         const render = () => {
           const isDark = currentTheme() === "dark";
-          button.textContent = isDark ? "Dark: On" : "Dark: Off";
-          button.setAttribute("aria-pressed", String(isDark));
+          button.dataset.state = isDark ? "dark" : "light";
+          button.setAttribute("aria-checked", String(isDark));
+          button.setAttribute(
+            "aria-label",
+            isDark ? "Switch to light mode" : "Switch to dark mode",
+          );
         };
 
         button.addEventListener("click", () => {
