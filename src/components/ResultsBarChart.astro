@@ -8,9 +8,9 @@ interface Props {
 const { rows } = Astro.props;
 
 const series = [
-  { key: "pErr", label: "P_err", barClass: "bg-[#5B3A1A]" },
-  { key: "pMiss", label: "P_miss", barClass: "bg-[#8B6D50]" },
-  { key: "pFa", label: "P_fa", barClass: "bg-[#C49A6C]" },
+  { key: "pErr", label: "P_err", color: "#5B3A1A" },
+  { key: "pMiss", label: "P_miss", color: "#8B6D50" },
+  { key: "pFa", label: "P_fa", color: "#C49A6C" },
 ] as const;
 
 const maxValue = Math.max(
@@ -24,7 +24,7 @@ const maxValue = Math.max(
       {
         series.map((metric) => (
           <div class="flex items-center gap-2">
-            <span class={`h-3 w-3 rounded-sm ${metric.barClass}`}></span>
+            <span class="h-3 w-3 rounded-sm" style={`background-color:${metric.color};`}></span>
             <span>{metric.label}</span>
           </div>
         ))
@@ -40,7 +40,7 @@ const maxValue = Math.max(
             <div class="mb-3 text-center text-sm font-semibold text-zinc-900 dark:text-zinc-100">
               {row.method}
             </div>
-            <div class="flex h-48 items-end justify-center gap-3">
+            <div class="flex h-48 items-end justify-center gap-3 border-b border-zinc-300 pb-1 dark:border-zinc-700">
               {
                 series.map((metric) => {
                   const value = row[metric.key];
@@ -51,8 +51,8 @@ const maxValue = Math.max(
                         {value.toFixed(3)}
                       </span>
                       <div
-                        class={`w-8 rounded-t-md ${metric.barClass}`}
-                        style={`height:${height}%;`}
+                        class="w-8 rounded-t-md"
+                        style={`height:${height}%; background-color:${metric.color};`}
                         aria-label={`${metric.label} for ${row.method}`}
                         title={`${metric.label}: ${value.toFixed(3)}`}
                       ></div>
