@@ -33,9 +33,27 @@ import HighlightedSection from "./components/HighlightedSection.astro";
 import Figure from "./components/Figure.astro";
 import Picture from "./components/Picture.astro";
 import Wide from "./components/Wide.astro";
+import ResultsBarChart from "./components/ResultsBarChart.astro";
+import ConfusionMatrix from "./components/ConfusionMatrix.astro";
 
 import illustration from "./assets/illustration.png";
 import scheme from "./assets/scheme.png";
+import qrCode from "./assets/qr-paper-code.png";
+import wacvLogo from "./assets/wacv-logo.png";
+import lirisLogo from "./assets/liris-logo.png";
+import lyon2Logo from "./assets/lyon2-logo.jpg";
+
+import {
+  summaryRows,
+  methodComparisonRows,
+  confusionLabels,
+  confusionMatrix,
+  unseenCounterfeitRows,
+  reconstructionRows,
+  templateAblationRows,
+  identityAblationRows,
+} from "./data/results";
+
 
 <HighlightedSection>
 
@@ -45,25 +63,23 @@ Counterfeiting affects diverse industries, including pharmaceuticals, electronic
 
 In this work, we propose a diffusion-based authentication framework that jointly leverages the original binary template, the printed CDP, and a representation of printer identity that captures relevant semantic information. Formulating authentication as multi-class printer classification over printer signatures lets our model capture fine-grained, device-specific features via spatial and textual conditioning. We extend ControlNet by repurposing the denoising process for class-conditioned noise prediction, enabling effective printer classification.
 
-On the Indigo $1\times1$ Base dataset, our method outperforms traditional similarity metrics and prior deep learning approaches. Results show the framework generalizes to counterfeit types unseen during training.
+On the Indigo $1\times1$ Base dataset, our method outperforms traditional similarity metrics and prior deep learning approaches, while generalizing to counterfeit types unseen during training.
 
 </HighlightedSection>
 
 ## Problem Setting
 
-The framework authenticates a candidate CDP by checking whether its predicted printer identity matches the expected authentic printer identity. The model is conditioned on:
+Authentication is formulated as printer-class prediction under multimodal conditioning.
 
-1. The binary template.
-2. The printed CDP.
-3. A text description of printer identity.
+1. Binary template supplies structural reference.
+2. Printed CDP supplies spatial printer-specific degradation.
+3. Printer identity text supplies class-level semantic conditioning.
 
-Authentication is then a decision over printer classes rather than a direct similarity threshold.
+A candidate is accepted as authentic only if predicted printer identity matches the known source printer.
 
 $$
 \hat{c} = \arg\min_{c_i} \mathbb{E}_t \left[ \| \epsilon - f_\theta(x_t, t, z, c_i) \|_2^2 \right]
 $$
-
-A sample is accepted as authentic only if $\hat{c}=c^*$.
 
 ## Visual Overview
 
@@ -75,7 +91,7 @@ A sample is accepted as authentic only if $\hat{c}=c^*$.
     priority
   />
   <Fragment slot="caption">
-    Examples of a binary template, authentic printed CDP, and counterfeit printed CDPs from traditional image processing and deep learning methods.
+    CDP examples showing the template, authentic print, and counterfeit variants generated through traditional and deep-learning-based estimation attacks.
   </Fragment>
 </Figure>
 
@@ -87,66 +103,263 @@ A sample is accepted as authentic only if $\hat{c}=c^*$.
       alt="Diffusion-based authentication pipeline with printer signature conditioning"
     />
     <Fragment slot="caption">
-      Proposed authentication pipeline: noised template latent + printed CDP latent + printer text conditioning, with class-wise noise prediction and minimum-error class selection.
+      Proposed pipeline: noised template latent + printed CDP latent + printer text conditioning, with class-wise noise prediction and minimum-error decision.
     </Fragment>
   </Figure>
 </Wide>
 
-## Key Results
+<HighlightedSection>
+
+## Key Insight
+
+A printer’s physical signature is embedded in how the binary template is degraded through printing and scanning. A diffusion model that can reverse this degradation for each class reconstructs accurately only when conditioned on the correct class, turning denoising quality into an authentication signal.
+
+</HighlightedSection>
+
+## Results At A Glance
+
+<ResultsBarChart rows={summaryRows} />
 
 ### Method Comparison (Authentication Error)
 
-| Method | P_err | P_miss (HP55) | P_miss (HP76) | P_miss mean | P_fa (HP55_55) | P_fa (HP55_76) | P_fa (HP76_76) | P_fa (HP76_55) | P_fa mean |
-| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| NCC | 0.286 | 0.292 | 0.310 | 0.301 | 0.300 | 0.361 | 0.264 | 0.201 | 0.273 |
-| SSIM | 0.275 | 0.264 | 0.300 | 0.281 | 0.292 | 0.285 | 0.292 | 0.210 | 0.269 |
-| Chaban et al. (retrained) | 0.091 | 0.125 | 0.111 | 0.118 | 0.097 | 0.160 | 0.000 | 0.000 | 0.064 |
-| **Ours** | **0.023** | **0.049** | **0.035** | **0.005** | **0.000** | **0.014** | 0.007 | **0.000** | **0.042** |
+<div class="not-prose full-bleed px-6">
+  <div class="mx-auto max-w-[70rem] overflow-x-auto rounded-xl border border-zinc-300 bg-[#FAF6F0] p-4 dark:border-zinc-700 dark:bg-zinc-900">
+    <table class="w-full min-w-[65rem] border-collapse text-sm">
+      <thead>
+        <tr>
+          <th class="border-b border-zinc-300 px-3 py-2 text-left font-semibold dark:border-zinc-700">Method</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">P_err</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">P_miss (HP55)</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">P_miss (HP76)</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">P_miss mean</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">P_fa (HP55_55)</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">P_fa (HP55_76)</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">P_fa (HP76_76)</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">P_fa (HP76_55)</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">P_fa mean</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          methodComparisonRows.map((row) => (
+            <tr class={row.highlight ? "bg-[#FFF8E1] dark:bg-zinc-800" : ""}>
+              <td class="border-b border-zinc-200 px-3 py-2 text-left dark:border-zinc-800">
+                {row.highlight ? <strong>{row.method}</strong> : row.method}
+              </td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">
+                {row.highlight ? <strong>{row.pErr.toFixed(3)}</strong> : row.pErr.toFixed(3)}
+              </td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">{row.pMissHp55.toFixed(3)}</td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">{row.pMissHp76.toFixed(3)}</td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">
+                {row.highlight ? <strong>{row.pMissMean.toFixed(3)}</strong> : row.pMissMean.toFixed(3)}
+              </td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">{row.pFaHp55_55.toFixed(3)}</td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">{row.pFaHp55_76.toFixed(3)}</td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">{row.pFaHp76_76.toFixed(3)}</td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">{row.pFaHp76_55.toFixed(3)}</td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">
+                {row.highlight ? <strong>{row.pFaMean.toFixed(3)}</strong> : row.pFaMean.toFixed(3)}
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
 
-### Classification Confusion Matrix (%)
+## Classification Analysis
 
-| Actual \\ Pred | HP55 | HP76 | HP55_55 | HP55_76 | HP76_76 | HP76_55 |
-| :--- | ---: | ---: | ---: | ---: | ---: | ---: |
-| HP55 | **95** | 5 | 0 | 0 | 0 | 0 |
-| HP76 | 3 | **97** | 0 | 0 | 0 | 0 |
-| HP55_55 | 0 | 0 | **83** | 15 | 1 | 1 |
-| HP55_76 | 1 | 0 | 14 | **83** | 1 | 1 |
-| HP76_76 | 0 | 1 | 1 | 1 | **89** | 8 |
-| HP76_55 | 0 | 0 | 2 | 2 | 19 | **77** |
+<ConfusionMatrix labels={confusionLabels} values={confusionMatrix} />
+
+The confusion matrix shows very strong separation for authentic classes (95-97%). Most confusion occurs among counterfeit subclasses, which has limited impact on final authentication because acceptance requires matching the expected authentic printer class.
 
 ### Generalization to Unseen Counterfeits
 
-| Counterfeit type group | P_err | P_miss | P_fa |
-| :--- | ---: | ---: | ---: |
-| Known counterfeit | 0.012 | 0.024 | 0.000 |
-| Unknown counterfeit | 0.012 | 0.024 | 0.000 |
+<div class="not-prose full-bleed px-6">
+  <div class="mx-auto max-w-[70rem] overflow-x-auto rounded-xl border border-zinc-300 bg-[#FAF6F0] p-4 dark:border-zinc-700 dark:bg-zinc-900">
+    <table class="w-full min-w-[28rem] border-collapse text-sm">
+      <thead>
+        <tr>
+          <th class="border-b border-zinc-300 px-3 py-2 text-left font-semibold dark:border-zinc-700">Counterfeit type group</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">P_err</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">P_miss</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">P_fa</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          unseenCounterfeitRows.map((row) => (
+            <tr>
+              <td class="border-b border-zinc-200 px-3 py-2 text-left dark:border-zinc-800">{row.type}</td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">{row.pErr.toFixed(3)}</td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">{row.pMiss.toFixed(3)}</td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">{row.pFa.toFixed(3)}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+## Ablations And Reconstruction
 
 ### Binary Template Reconstruction (VAE)
 
-| Configuration | Avg. MSE |
-| :--- | ---: |
-| Pretrained VAE | 0.581 |
-| **Fine-tuned VAE** | **0.075** |
+<div class="not-prose full-bleed px-6">
+  <div class="mx-auto max-w-[70rem] overflow-x-auto rounded-xl border border-zinc-300 bg-[#FAF6F0] p-4 dark:border-zinc-700 dark:bg-zinc-900">
+    <table class="w-full min-w-[26rem] border-collapse text-sm">
+      <thead>
+        <tr>
+          <th class="border-b border-zinc-300 px-3 py-2 text-left font-semibold dark:border-zinc-700">Configuration</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">Avg. MSE</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          reconstructionRows.map((row) => (
+            <tr class={row.highlight ? "bg-[#FFF8E1] dark:bg-zinc-800" : ""}>
+              <td class="border-b border-zinc-200 px-3 py-2 text-left dark:border-zinc-800">
+                {row.highlight ? <strong>{row.configuration}</strong> : row.configuration}
+              </td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">
+                {row.highlight ? <strong>{row.mse.toFixed(3)}</strong> : row.mse.toFixed(3)}
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
 
 ### Ablation: Template Input
 
-| Input configuration | P_err | P_miss | P_fa |
-| :--- | ---: | ---: | ---: |
-| No template input | 0.660 | 0.430 | 0.200 |
-| **With template input** | **0.023** | **0.042** | **0.005** |
+<div class="not-prose full-bleed px-6">
+  <div class="mx-auto max-w-[70rem] overflow-x-auto rounded-xl border border-zinc-300 bg-[#FAF6F0] p-4 dark:border-zinc-700 dark:bg-zinc-900">
+    <table class="w-full min-w-[26rem] border-collapse text-sm">
+      <thead>
+        <tr>
+          <th class="border-b border-zinc-300 px-3 py-2 text-left font-semibold dark:border-zinc-700">Input configuration</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">P_err</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">P_miss</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">P_fa</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          templateAblationRows.map((row) => (
+            <tr class={row.highlight ? "bg-[#FFF8E1] dark:bg-zinc-800" : ""}>
+              <td class="border-b border-zinc-200 px-3 py-2 text-left dark:border-zinc-800">
+                {row.highlight ? <strong>{row.configuration}</strong> : row.configuration}
+              </td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">
+                {row.highlight ? <strong>{row.pErr.toFixed(3)}</strong> : row.pErr.toFixed(3)}
+              </td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">
+                {row.highlight ? <strong>{row.pMiss.toFixed(3)}</strong> : row.pMiss.toFixed(3)}
+              </td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">
+                {row.highlight ? <strong>{row.pFa.toFixed(3)}</strong> : row.pFa.toFixed(3)}
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
 
 ### Ablation: Printer Identity Representation
 
-| Representation | P_err | P_miss | P_fa |
-| :--- | ---: | ---: | ---: |
-| Printer index-based | 0.521 | 0.962 | 0.082 |
-| Appearance-based text | 0.035 | 0.063 | **0.001** |
-| **Printer information text** | **0.023** | **0.042** | 0.005 |
+<div class="not-prose full-bleed px-6">
+  <div class="mx-auto max-w-[70rem] overflow-x-auto rounded-xl border border-zinc-300 bg-[#FAF6F0] p-4 dark:border-zinc-700 dark:bg-zinc-900">
+    <table class="w-full min-w-[26rem] border-collapse text-sm">
+      <thead>
+        <tr>
+          <th class="border-b border-zinc-300 px-3 py-2 text-left font-semibold dark:border-zinc-700">Representation</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">P_err</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">P_miss</th>
+          <th class="border-b border-zinc-300 px-3 py-2 text-center font-semibold dark:border-zinc-700">P_fa</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          identityAblationRows.map((row) => (
+            <tr class={row.highlight ? "bg-[#FFF8E1] dark:bg-zinc-800" : ""}>
+              <td class="border-b border-zinc-200 px-3 py-2 text-left dark:border-zinc-800">
+                {row.highlight ? <strong>{row.representation}</strong> : row.representation}
+              </td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">
+                {row.highlight ? <strong>{row.pErr.toFixed(3)}</strong> : row.pErr.toFixed(3)}
+              </td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">
+                {row.highlight ? <strong>{row.pMiss.toFixed(3)}</strong> : row.pMiss.toFixed(3)}
+              </td>
+              <td class="border-b border-zinc-200 px-3 py-2 text-center dark:border-zinc-800">
+                {row.highlight ? <strong>{row.pFa.toFixed(3)}</strong> : row.pFa.toFixed(3)}
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+## Contributions
+
+1. First unified CDP authentication framework combining binary template, printed CDP, and printer identity conditioning.
+2. ControlNet extension from generation to class-conditioned classification by per-class noise prediction.
+3. Multi-printer authentication setting that captures printer-specific signatures in one model.
+
+## Future Work
+
+1. Authentic-only training without requiring counterfeit samples.
+2. Scaling evaluation to larger printer sets and broader hardware diversity.
+3. Robustness validation across varied acquisition pipelines, scanners, and capture resolutions.
+
+## Paper And Code
+
+<div class="not-prose full-bleed px-6">
+  <div class="mx-auto max-w-[70rem] rounded-2xl border border-[#7A4A2A] bg-[#5B3A1A] p-6 text-[#FDF6EE] dark:border-[#C49A6C] dark:bg-zinc-950">
+    <div class="grid items-center gap-6 lg:grid-cols-[1fr_auto]">
+      <div>
+        <h3 class="m-0 text-2xl font-semibold text-[#FFF8E1]">Scan for paper and code</h3>
+        <p class="mt-2 mb-4 text-base text-[#F5EAD9]">
+          Use the QR code for direct access, or use the links below.
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <a href="paper.pdf" class="rounded-full bg-[#FFF8E1] px-4 py-2 text-sm font-semibold text-[#5B3A1A] no-underline hover:bg-white">Paper PDF</a>
+          <a href="https://gitlab.liris.cnrs.fr/anr-trustit/diffusion_based_cdp_authentication.git" class="rounded-full border border-[#E8D8C4] px-4 py-2 text-sm font-semibold text-[#FFF8E1] no-underline hover:bg-[#7A4A2A]">Code</a>
+          <a href="https://example.com/arxiv" class="rounded-full border border-[#E8D8C4] px-4 py-2 text-sm font-semibold text-[#FFF8E1] no-underline hover:bg-[#7A4A2A]">arXiv</a>
+        </div>
+        <p class="mt-4 mb-0 text-sm text-[#E8D8C4]">Contact: bolutife.atoki@liris.cnrs.fr</p>
+      </div>
+
+      <img
+        src={qrCode.src}
+        width="180"
+        height="180"
+        alt="QR code to access paper and code"
+        class="mx-auto rounded-xl border border-[#E8D8C4] bg-white p-2"
+      />
+    </div>
+
+    <div class="mt-6 flex flex-wrap items-center justify-center gap-6 rounded-xl bg-[#7A4A2A] px-4 py-3">
+      <img src={wacvLogo.src} alt="WACV 2026 logo" class="h-12 w-auto object-contain" />
+      <img src={lirisLogo.src} alt="LIRIS logo" class="h-10 w-auto object-contain" />
+      <img src={lyon2Logo.src} alt="Universite Lumiere Lyon 2 logo" class="h-14 w-auto object-contain" />
+    </div>
+  </div>
+</div>
 
 ## Notes
 
-1. Author links, arXiv URL, and slides URL are placeholders and will be updated later.
-2. Code repository currently points to the private project repository and can be swapped once public links are finalized.
+1. Author links, arXiv URL, and slides URL are placeholders and should be updated with final public links.
+2. Code repository currently points to the private project repository and can be switched when public release is available.
 
 ## BibTeX
 

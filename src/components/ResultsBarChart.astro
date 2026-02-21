@@ -1,0 +1,77 @@
+---
+import type { SummaryRow } from "../data/results";
+
+interface Props {
+  rows: SummaryRow[];
+}
+
+const { rows } = Astro.props;
+
+const series = [
+  { key: "pErr", label: "P_err", barClass: "bg-[#5B3A1A]" },
+  { key: "pMiss", label: "P_miss", barClass: "bg-[#8B6D50]" },
+  { key: "pFa", label: "P_fa", barClass: "bg-[#C49A6C]" },
+] as const;
+
+const maxValue = Math.max(
+  ...rows.flatMap((row) => series.map((metric) => row[metric.key])),
+);
+---
+
+<div class="not-prose full-bleed px-6">
+  <div class="mx-auto max-w-[70rem] rounded-xl border border-zinc-300 bg-[#FAF6F0] p-6 dark:border-zinc-700 dark:bg-zinc-900">
+    <div class="mb-5 flex flex-wrap items-center gap-4 text-sm text-zinc-700 dark:text-zinc-200">
+      {
+        series.map((metric) => (
+          <div class="flex items-center gap-2">
+            <span class={`h-3 w-3 rounded-sm ${metric.barClass}`}></span>
+            <span>{metric.label}</span>
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {
+        rows.map((row) => (
+          <div
+            class={`rounded-lg border p-4 ${row.highlight ? "border-[#5B3A1A] bg-[#FFF8E1] dark:border-[#C49A6C] dark:bg-zinc-800" : "border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-950"}`}
+          >
+            <div class="mb-3 text-center text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              {row.method}
+            </div>
+            <div class="flex h-48 items-end justify-center gap-3">
+              {
+                series.map((metric) => {
+                  const value = row[metric.key];
+                  const height = Math.max(8, (value / maxValue) * 100);
+                  return (
+                    <div class="flex min-w-[3.5rem] flex-col items-center gap-1">
+                      <span class="text-xs font-semibold text-zinc-700 dark:text-zinc-200">
+                        {value.toFixed(3)}
+                      </span>
+                      <div
+                        class={`w-8 rounded-t-md ${metric.barClass}`}
+                        style={`height:${height}%;`}
+                        aria-label={`${metric.label} for ${row.method}`}
+                        title={`${metric.label}: ${value.toFixed(3)}`}
+                      ></div>
+                      <span class="text-[11px] text-zinc-600 dark:text-zinc-300">
+                        {metric.label}
+                      </span>
+                    </div>
+                  );
+                })
+              }
+            </div>
+          </div>
+        ))
+      }
+    </div>
+
+    <p class="mt-4 text-sm text-zinc-700 dark:text-zinc-200">
+      Lower is better for all three metrics. The chart summarizes the overall
+      error profile used in the detailed tables below.
+    </p>
+  </div>
+</div>
