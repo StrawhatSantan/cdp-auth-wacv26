@@ -77,29 +77,42 @@ $$
 \hat{c} = \arg\min_{c_i} \mathbb{E}_t \left[ \| \epsilon - f_\theta(x_t, t, z, c_i) \|_2^2 \right]
 $$
 
-## Visual Overview
+## Visual Overview: Problem To Solution
+
+This section is meant to be read as a two-step narrative:
+
+1. Figure 1 shows why similarity-based authentication can fail under strong counterfeit attacks.
+2. Figure 2 shows the proposed diffusion-based pipeline that addresses this failure mode.
+
+### Figure 1: Failure Case For Similarity-Based Authentication
+
+The left side starts from the binary template and authentic print. The right side shows counterfeit prints obtained after estimation attacks. Even when counterfeit quality is high, score-based checks such as NCC can remain deceptively high, which motivates moving from direct similarity scoring to printer-aware classification.
 
 <Figure>
   <Picture
     slot="figure"
     src={illustration}
-    alt="Binary template, authentic print, and counterfeit print examples"
+    alt="Failure case: high-quality counterfeit CDPs can still obtain high similarity scores"
     priority
   />
   <Fragment slot="caption">
-    CDP examples showing the template, authentic print, and counterfeit variants generated through traditional and deep-learning-based estimation attacks.
+    Threat model and failure mode: deep-learning-based counterfeits can preserve high structural similarity, making thresholded metrics less reliable.
   </Fragment>
 </Figure>
+
+### Figure 2: Printer-Conditioned Diffusion Authentication Pipeline
+
+This pipeline takes the noised template latent and conditions denoising on both the printed CDP (spatial signal) and printer identity (class signal). The model predicts noise for each candidate class and selects the class with minimum reconstruction error, then authenticates only if the predicted class matches the expected source printer.
 
 <Wide>
   <Figure>
     <Picture
       slot="figure"
       src={scheme}
-      alt="Diffusion-based authentication pipeline with printer signature conditioning"
+      alt="Proposed diffusion-based authentication pipeline with class-conditioned noise prediction"
     />
     <Fragment slot="caption">
-      Proposed pipeline: noised template latent + printed CDP latent + printer text conditioning, with class-wise noise prediction and minimum-error decision.
+      Proposed solution: class-conditioned denoising turns reconstruction quality into a robust authentication decision signal.
     </Fragment>
   </Figure>
 </Wide>
