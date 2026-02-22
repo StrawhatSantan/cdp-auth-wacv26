@@ -29,14 +29,14 @@ const steps: PipelineStep[] = [
     title: "Step 2: Class-Conditioned Noise Prediction",
     description:
       "For each candidate class, the diffusion backbone predicts reconstruction noise conditioned on template latent, printed signal, and class context.",
-    focuses: [{ x: 37.75, y: 21.23, w: 42.15, h: 23.86 }],
+    focuses: [{ x: 37.75, y: 21.23, w: 36.5, h: 23.86 }],
   },
   {
     shortLabel: "Class-Wise Error",
     title: "Step 3: Compare Reconstruction Errors",
     description:
       "The model computes an error value per class and chooses the class with minimum denoising loss as the most likely source printer.",
-    focuses: [{ x: 16.45, y: 55.51, w: 51.1, h: 17.45 }],
+    focuses: [{ x: 16.45, y: 60.9, w: 51.1, h: 12.1 }],
   },
   {
     shortLabel: "Authentication",
