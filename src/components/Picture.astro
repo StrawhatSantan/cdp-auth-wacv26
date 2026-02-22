@@ -21,7 +21,7 @@ if (typeof src === "string") {
 ---
 
 <AstroPicture
-  class={`rounded-lg max-h-[calc(100svh-3rem)] max-w-full w-min mx-auto ${invertInDarkMode ? "dark:invert" : ""}`}
+  class={`mx-auto w-min max-h-[calc(100svh-3rem)] max-w-full rounded-2xl ring-1 ring-zinc-300/70 shadow-[0_18px_50px_-28px_rgba(15,95,120,0.65)] dark:ring-zinc-700 ${invertInDarkMode ? "dark:invert" : ""}`}
   src={image}
   alt={alt}
   layout="constrained"

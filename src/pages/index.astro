@@ -1,6 +1,4 @@
 ---
-import { Font } from "astro:assets";
-
 import Links from "../components/Links.astro";
 import Authors from "../components/Authors.astro";
 import Notes from "../components/Notes.astro";
@@ -44,7 +42,7 @@ const prefix = baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
 ---
 
 <!doctype html>
-<html class="bg-white dark:bg-zinc-900" lang="en" data-theme={theme}>
+<html lang="en" data-theme={theme}>
   <head>
     <meta charset="UTF-8" />
     {description && <meta name="description" content={description} />}
@@ -57,11 +55,6 @@ const prefix = baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
     {description && <meta property="og:description" content={description} />}
     <meta property="og:type" content="website" />
     {thumbnail && <meta property="og:image" content={prefix + thumbnail} />}
-
-    <Font
-      cssVariable="--font-noto-sans"
-      preload={[{ subset: "latin", style: "normal" }]}
-    />
 
     <script is:inline>
       (() => {
@@ -82,9 +75,9 @@ const prefix = baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
     <title>{title}</title>
   </head>
   <body
-    class="prose prose-lg prose-zinc dark:prose-invert prose-a:text-blue-500 prose-a:dark:text-blue-300 prose-a:no-underline prose-a:hover:underline prose-a:font-normal prose-code:bg-zinc-200 prose-code:dark:bg-zinc-800 prose-code:text-zinc-800 prose-code:dark:text-zinc-200 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-medium prose-code:before:content-none prose-code:after:content-none max-w-none pt-16 pb-6 font-(family-name:--font-noto-sans)"
+    class="site-body prose prose-lg prose-zinc dark:prose-invert prose-a:no-underline prose-a:hover:underline prose-a:font-medium prose-code:bg-zinc-200 prose-code:dark:bg-zinc-800 prose-code:text-zinc-800 prose-code:dark:text-zinc-200 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-medium prose-code:before:content-none prose-code:after:content-none max-w-none pt-16 pb-6"
   >
-    <div class="not-prose fixed top-4 right-4 z-50">
+    <div class="not-prose theme-toggle-wrap">
       <button
         id="theme-toggle"
         type="button"
@@ -92,30 +85,32 @@ const prefix = baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
         aria-checked="false"
         aria-label="Switch to dark mode"
         data-state="light"
-        class="group inline-flex items-center gap-3 rounded-full border border-zinc-300 bg-white/90 px-3 py-2 text-sm text-zinc-800 shadow-sm backdrop-blur transition-colors hover:bg-white dark:border-zinc-700 dark:bg-zinc-900/90 dark:text-zinc-100 dark:hover:bg-zinc-900"
+        class="theme-toggle group"
       >
-        <span class="font-medium">Theme</span>
-        <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-zinc-300 transition-colors group-data-[state=dark]:bg-zinc-700">
-          <span class="inline-block h-5 w-5 translate-x-0 rounded-full bg-white shadow transition-transform group-data-[state=dark]:translate-x-5"></span>
+        <span class="theme-toggle-label">Theme</span>
+        <span class="toggle-track">
+          <span class="toggle-thumb"></span>
         </span>
       </button>
     </div>
 
-    <header class="mx-auto mb-12 max-w-[50rem] px-6 text-center">
-      <h1 class="text-5xl font-medium">{title}</h1>
-      <div class="flex flex-col items-center gap-6">
-        <Authors authors={authors} />
-        {affiliation && <div>{affiliation}</div>}
-        {conference && <div>{conference}</div>}
-        {notes && <Notes notes={notes} />}
-        {links && <Links links={links} />}
+    <header class="hero-wrap">
+      <div class="hero-panel">
+        {conference && <p class="hero-badge">{conference}</p>}
+        <h1 class="hero-title">{title}</h1>
+        <div class="hero-meta">
+          <Authors authors={authors} />
+          {affiliation && <div class="hero-affiliation">{affiliation}</div>}
+          {notes && <Notes notes={notes} />}
+          {links && <Links links={links} />}
+        </div>
       </div>
     </header>
-    <main>
+    <main class="content-shell">
       <Content components={{ table: Table }} />
     </main>
-    <footer class="mx-auto max-w-[50rem] px-6 text-center">
-      <p class="prose-sm text-center">
+    <footer class="site-footer">
+      <p class="prose-sm text-center opacity-75">
         Built with <a
           href="https://research-template.roman.technology"
           rel="nofollow">Roman Hauksson-Neill's project page template</a
