@@ -10,7 +10,7 @@ export const summaryRows: SummaryRow[] = [
   { method: "NCC", pErr: 0.286, pMiss: 0.301, pFa: 0.273 },
   { method: "SSIM", pErr: 0.275, pMiss: 0.281, pFa: 0.269 },
   { method: "[4]", pErr: 0.091, pMiss: 0.118, pFa: 0.064 },
-  { method: "Ours", pErr: 0.023, pMiss: 0.005, pFa: 0.005, highlight: true },
+  { method: "Ours", pErr: 0.023, pMiss: 0.005, pFa: 0.042, highlight: true },
 ];
 
 export type MethodComparisonRow = {
