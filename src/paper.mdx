@@ -99,7 +99,7 @@ The left side starts from the binary template and authentic print. The right sid
 
 This pipeline takes the noised template latent and conditions denoising on both the printed CDP (spatial signal) and printer identity (class signal). The model predicts noise for each candidate class and selects the class with minimum reconstruction error, then authenticates only if the predicted class matches the expected source printer.
 
-<PipelineExplorer image={scheme} labels={confusionLabels} matrix={confusionMatrix} />
+<PipelineExplorer image={scheme} labels={confusionLabels} />
 
 <HighlightedSection>
 

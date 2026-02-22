@@ -6,20 +6,12 @@ interface PipelineStep {
   focus: { x: number; y: number; w: number; h: number };
 }
 
-interface SampleProfile {
-  id: string;
-  observedIndex: number;
-  label: string;
-  classLabel: string;
-}
-
 interface Props {
   image: ImageMetadata;
   labels: string[];
-  matrix: number[][];
 }
 
-const { image, labels, matrix } = Astro.props;
+const { image, labels } = Astro.props;
 
 const steps: PipelineStep[] = [
   {
@@ -52,19 +44,10 @@ const steps: PipelineStep[] = [
   },
 ];
 
-const sampleProfiles: SampleProfile[] = labels.map((label, index) => {
-  const normalized = label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-  const isAuthentic = !label.includes("_");
-  return {
-    id: `sample-${normalized}`,
-    observedIndex: index,
-    classLabel: label,
-    label: `${isAuthentic ? "Authentic sample" : "Counterfeit-like sample"}: ${label}`,
-  };
-});
-
 const authenticLabels = labels.filter((label) => !label.includes("_"));
-const defaultExpected = authenticLabels[0] ?? labels[0] ?? "HP55";
+const expectedOptions = authenticLabels.length > 0 ? authenticLabels : labels;
+const defaultExpected = expectedOptions[0] ?? "HP55";
+const defaultPredicted = labels[0] ?? defaultExpected;
 ---
 
 <div class="not-prose full-bleed px-6">
@@ -73,8 +56,6 @@ const defaultExpected = authenticLabels[0] ?? labels[0] ?? "HP55";
     data-pipeline-root
     data-steps={JSON.stringify(steps)}
     data-labels={JSON.stringify(labels)}
-    data-matrix={JSON.stringify(matrix)}
-    data-samples={JSON.stringify(sampleProfiles)}
   >
     <div class="pipeline-header">
       <h4>Interactive Figure 2 Walkthrough</h4>
@@ -127,11 +108,11 @@ const defaultExpected = authenticLabels[0] ?? labels[0] ?? "HP55";
 
     <div class="pipeline-simulator">
       <div class="pipeline-simulator-header">
-        <h4>Inference Simulator</h4>
+        <h4>Authentication Strategy Simulator</h4>
         <p>
-          Class-wise loss proxy:
-          <code>proxy_loss = 1 - (confusion_score / 100)</code>. Lower is
-          better. This is for explanation only.
+          Simulates the final policy:
+          authenticate only when predicted class equals expected authentic
+          printer.
         </p>
       </div>
 
@@ -139,7 +120,7 @@ const defaultExpected = authenticLabels[0] ?? labels[0] ?? "HP55";
         <label>
           Expected authentic printer
           <select data-expected-select>
-            {authenticLabels.map((label) => (
+            {expectedOptions.map((label) => (
               <option value={label} selected={label === defaultExpected}>
                 {label}
               </option>
@@ -147,11 +128,11 @@ const defaultExpected = authenticLabels[0] ?? labels[0] ?? "HP55";
           </select>
         </label>
         <label>
-          Observed sample profile
-          <select data-sample-select>
-            {sampleProfiles.map((sample, index) => (
-              <option value={sample.id} selected={index === 0}>
-                {sample.label}
+          Predicted class
+          <select data-predicted-select>
+            {labels.map((label, index) => (
+              <option value={label} selected={index === 0}>
+                {label}
               </option>
             ))}
           </select>
@@ -159,16 +140,19 @@ const defaultExpected = authenticLabels[0] ?? labels[0] ?? "HP55";
       </div>
 
       <div class="pipeline-simulator-body">
-        <div class="pipeline-loss-table">
-          {labels.map((label, index) => (
-            <div class="pipeline-loss-row" data-class-row data-class-index={index}>
-              <span class="pipeline-loss-label">{label}</span>
-              <div class="pipeline-loss-track">
-                <span class="pipeline-loss-fill" data-loss-fill></span>
-              </div>
-              <span class="pipeline-loss-value" data-loss-value>0.000</span>
-            </div>
-          ))}
+        <div class="pipeline-strategy-card">
+          <p class="pipeline-strategy-kicker">Rule Logic</p>
+          <ol class="pipeline-strategy-steps">
+            <li>Select expected authentic printer label.</li>
+            <li>Use model output as predicted class label.</li>
+            <li>Accept only if labels match exactly.</li>
+          </ol>
+          <p class="pipeline-strategy-equation" data-strategy-equation>
+            {defaultPredicted} == {defaultExpected}
+          </p>
+          <p class="pipeline-strategy-outcome" data-strategy-outcome>
+            Match -> Authentic
+          </p>
         </div>
 
         <div class="pipeline-decision-card">
@@ -178,15 +162,11 @@ const defaultExpected = authenticLabels[0] ?? labels[0] ?? "HP55";
           </p>
           <p class="pipeline-decision-line">
             Predicted class:
-            <strong data-predicted-class>{labels[0] ?? "HP55"}</strong>
+            <strong data-predicted-class>{defaultPredicted}</strong>
           </p>
           <p class="pipeline-decision-line">
             Expected class:
             <strong data-expected-class>{defaultExpected}</strong>
-          </p>
-          <p class="pipeline-decision-line">
-            Observed profile:
-            <strong data-observed-class>{sampleProfiles[0]?.classLabel ?? "HP55"}</strong>
           </p>
           <p class="pipeline-decision-reason" data-decision-reason>
             Predicted class does not match expected printer.
@@ -212,10 +192,6 @@ const defaultExpected = authenticLabels[0] ?? labels[0] ?? "HP55";
       };
 
       const steps = parseJSON("data-steps", []);
-      const labels = parseJSON("data-labels", []);
-      const matrix = parseJSON("data-matrix", []);
-      const samples = parseJSON("data-samples", []);
-
       const focusBox = root.querySelector("[data-focus-box]");
       const stepButtons = Array.from(root.querySelectorAll("[data-step-button]"));
       const stepKicker = root.querySelector("[data-step-kicker]");
@@ -223,13 +199,13 @@ const defaultExpected = authenticLabels[0] ?? labels[0] ?? "HP55";
       const stepDescription = root.querySelector("[data-step-description]");
 
       const expectedSelect = root.querySelector("[data-expected-select]");
-      const sampleSelect = root.querySelector("[data-sample-select]");
-      const classRows = Array.from(root.querySelectorAll("[data-class-row]"));
+      const predictedSelect = root.querySelector("[data-predicted-select]");
       const predictedClass = root.querySelector("[data-predicted-class]");
       const expectedClass = root.querySelector("[data-expected-class]");
-      const observedClass = root.querySelector("[data-observed-class]");
       const decisionState = root.querySelector("[data-decision-state]");
       const decisionReason = root.querySelector("[data-decision-reason]");
+      const strategyEquation = root.querySelector("[data-strategy-equation]");
+      const strategyOutcome = root.querySelector("[data-strategy-outcome]");
 
       const setStep = (index) => {
         const step = steps[index] || steps[0];
@@ -261,64 +237,40 @@ const defaultExpected = authenticLabels[0] ?? labels[0] ?? "HP55";
       });
 
       const runSimulation = () => {
-        if (!expectedSelect || !sampleSelect) return;
+        if (!expectedSelect || !predictedSelect) return;
         const expected = expectedSelect.value;
-        const sample = samples.find((item) => item.id === sampleSelect.value) || samples[0];
-        if (!sample) return;
-
-        const row = matrix[sample.observedIndex] || [];
-        const losses = labels.map((_, index) => {
-          const score = Number(row[index] ?? 0);
-          return Math.max(0.001, 1 - score / 100);
-        });
-
-        let minIndex = 0;
-        losses.forEach((value, index) => {
-          if (value < losses[minIndex]) {
-            minIndex = index;
-          }
-        });
-
-        classRows.forEach((rowElement) => {
-          const index = Number(rowElement.getAttribute("data-class-index") ?? "0");
-          const fill = rowElement.querySelector("[data-loss-fill]");
-          const value = rowElement.querySelector("[data-loss-value]");
-          const loss = losses[index] ?? 1;
-
-          if (fill) {
-            fill.style.width = `${Math.min(100, Math.max(1, loss * 100))}%`;
-          }
-          if (value) {
-            value.textContent = loss.toFixed(3);
-          }
-
-          rowElement.classList.toggle("is-best", index === minIndex);
-        });
-
-        const predicted = labels[minIndex] ?? "";
+        const predicted = predictedSelect.value;
         const isAuthentic = predicted === expected;
 
         if (predictedClass) predictedClass.textContent = predicted;
         if (expectedClass) expectedClass.textContent = expected;
-        if (observedClass) observedClass.textContent = sample.classLabel;
-        if (decisionState) decisionState.textContent = isAuthentic ? "Authentic" : "Counterfeit";
+
+        if (strategyEquation) {
+          strategyEquation.textContent = `${predicted} ${isAuthentic ? "==" : "!="} ${expected}`;
+        }
+        if (strategyOutcome) {
+          strategyOutcome.textContent = isAuthentic
+            ? "Match -> Authentic"
+            : "Mismatch -> Counterfeit";
+        }
+
+        if (decisionState) {
+          decisionState.textContent = isAuthentic ? "Authentic" : "Counterfeit";
+          decisionState.setAttribute("data-state", isAuthentic ? "authentic" : "counterfeit");
+        }
 
         if (decisionReason) {
           decisionReason.textContent = isAuthentic
             ? "Predicted class matches expected printer."
             : "Predicted class does not match expected printer.";
         }
-
-        if (decisionState) {
-          decisionState.setAttribute("data-state", isAuthentic ? "authentic" : "counterfeit");
-        }
       };
 
       if (expectedSelect) {
         expectedSelect.addEventListener("change", runSimulation);
       }
-      if (sampleSelect) {
-        sampleSelect.addEventListener("change", runSimulation);
+      if (predictedSelect) {
+        predictedSelect.addEventListener("change", runSimulation);
       }
 
       setStep(0);
