@@ -27,28 +27,28 @@ const steps: PipelineStep[] = [
     title: "Step 1: Build Joint Conditioning",
     description:
       "The noised latent is conditioned with printed-CDP spatial features and printer-identity text features to expose both local texture and class semantics.",
-    focus: { x: 1, y: 5, w: 33, h: 54 },
+    focus: { x: 6, y: 15, w: 26, h: 38 },
   },
   {
     shortLabel: "Noise Prediction",
     title: "Step 2: Class-Conditioned Noise Prediction",
     description:
       "For each candidate class, the diffusion backbone predicts reconstruction noise conditioned on template latent, printed signal, and class context.",
-    focus: { x: 30, y: 11, w: 38, h: 45 },
+    focus: { x: 37, y: 13, w: 28, h: 34 },
   },
   {
     shortLabel: "Class-Wise Error",
     title: "Step 3: Compare Reconstruction Errors",
     description:
       "The model computes an error value per class and chooses the class with minimum denoising loss as the most likely source printer.",
-    focus: { x: 22, y: 65, w: 50, h: 11 },
+    focus: { x: 25, y: 66, w: 42, h: 8 },
   },
   {
     shortLabel: "Authentication",
     title: "Step 4: Decision Rule",
     description:
       "Authentication succeeds only if the predicted class matches the expected authentic printer; otherwise the sample is flagged as counterfeit.",
-    focus: { x: 72, y: 34, w: 25, h: 39 },
+    focus: { x: 77, y: 34, w: 16, h: 36 },
   },
 ];
 
