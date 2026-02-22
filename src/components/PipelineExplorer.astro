@@ -3,7 +3,7 @@ interface PipelineStep {
   shortLabel: string;
   title: string;
   description: string;
-  focus: { x: number; y: number; w: number; h: number };
+  focuses: Array<{ x: number; y: number; w: number; h: number }>;
 }
 
 interface Props {
@@ -19,28 +19,31 @@ const steps: PipelineStep[] = [
     title: "Step 1: Build Joint Conditioning",
     description:
       "The noised latent is conditioned with printed-CDP spatial features and printer-identity text features to expose both local texture and class semantics.",
-    focus: { x: 6, y: 15, w: 26, h: 38 },
+    focuses: [
+      { x: 0.08, y: 0.08, w: 15.78, h: 21.0 },
+      { x: 16.37, y: 15.48, w: 15.31, h: 16.77 },
+    ],
   },
   {
     shortLabel: "Noise Prediction",
     title: "Step 2: Class-Conditioned Noise Prediction",
     description:
       "For each candidate class, the diffusion backbone predicts reconstruction noise conditioned on template latent, printed signal, and class context.",
-    focus: { x: 37, y: 13, w: 28, h: 34 },
+    focuses: [{ x: 37.75, y: 21.23, w: 42.15, h: 23.86 }],
   },
   {
     shortLabel: "Class-Wise Error",
     title: "Step 3: Compare Reconstruction Errors",
     description:
       "The model computes an error value per class and chooses the class with minimum denoising loss as the most likely source printer.",
-    focus: { x: 25, y: 66, w: 42, h: 8 },
+    focuses: [{ x: 16.45, y: 55.51, w: 51.1, h: 17.45 }],
   },
   {
     shortLabel: "Authentication",
     title: "Step 4: Decision Rule",
     description:
       "Authentication succeeds only if the predicted class matches the expected authentic printer; otherwise the sample is flagged as counterfeit.",
-    focus: { x: 77, y: 34, w: 16, h: 36 },
+    focuses: [{ x: 72.1, y: 43.05, w: 27.91, h: 46.9 }],
   },
 ];
 
@@ -75,7 +78,7 @@ const defaultPredicted = labels[0] ?? defaultExpected;
             alt="Interactive Figure 2: class-conditioned diffusion authentication pipeline"
             loading="lazy"
           />
-          <div class="pipeline-focus-box" data-focus-box></div>
+          <div class="pipeline-focus-layer" data-focus-layer></div>
         </div>
         <p class="pipeline-diagram-hint">
           Highlight box follows the selected step.
@@ -192,7 +195,7 @@ const defaultPredicted = labels[0] ?? defaultExpected;
       };
 
       const steps = parseJSON("data-steps", []);
-      const focusBox = root.querySelector("[data-focus-box]");
+      const focusLayer = root.querySelector("[data-focus-layer]");
       const stepButtons = Array.from(root.querySelectorAll("[data-step-button]"));
       const stepKicker = root.querySelector("[data-step-kicker]");
       const stepTitle = root.querySelector("[data-step-title]");
@@ -217,11 +220,18 @@ const defaultPredicted = labels[0] ?? defaultExpected;
           button.setAttribute("aria-pressed", isActive ? "true" : "false");
         });
 
-        if (focusBox && step.focus) {
-          focusBox.style.left = `${step.focus.x}%`;
-          focusBox.style.top = `${step.focus.y}%`;
-          focusBox.style.width = `${step.focus.w}%`;
-          focusBox.style.height = `${step.focus.h}%`;
+        if (focusLayer) {
+          focusLayer.innerHTML = "";
+          const focuses = Array.isArray(step.focuses) ? step.focuses : [];
+          focuses.forEach((focus) => {
+            const box = document.createElement("div");
+            box.className = "pipeline-focus-box";
+            box.style.left = `${focus.x}%`;
+            box.style.top = `${focus.y}%`;
+            box.style.width = `${focus.w}%`;
+            box.style.height = `${focus.h}%`;
+            focusLayer.appendChild(box);
+          });
         }
 
         if (stepKicker) stepKicker.textContent = `Step ${index + 1}`;
