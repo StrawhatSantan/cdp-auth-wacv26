@@ -8,9 +8,24 @@ interface Props {
 const { rows } = Astro.props;
 
 const series = [
-  { key: "pErr", label: "P_err", color: "#5B3A1A" },
-  { key: "pMiss", label: "P_miss", color: "#8B6D50" },
-  { key: "pFa", label: "P_fa", color: "#C49A6C" },
+  {
+    key: "pErr",
+    label: "P_err",
+    description: "average of P_fa and P_miss",
+    color: "#5B3A1A",
+  },
+  {
+    key: "pMiss",
+    label: "P_miss",
+    description: "missed authentic detection rate",
+    color: "#8B6D50",
+  },
+  {
+    key: "pFa",
+    label: "P_fa",
+    description: "false counterfeit acceptance rate",
+    color: "#C49A6C",
+  },
 ] as const;
 
 const maxValue = Math.max(
@@ -25,7 +40,7 @@ const maxValue = Math.max(
         series.map((metric) => (
           <div class="flex items-center gap-2">
             <span class="h-3 w-3 rounded-sm" style={`background-color:${metric.color};`}></span>
-            <span>{metric.label}</span>
+            <span>{metric.label} ({metric.description})</span>
           </div>
         ))
       }
