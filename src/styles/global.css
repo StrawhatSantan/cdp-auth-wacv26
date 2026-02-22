@@ -560,6 +560,11 @@ body.site-body::after {
   box-shadow: var(--site-shadow);
 }
 
+.results-chart-note {
+  max-width: none;
+  white-space: nowrap;
+}
+
 [data-theme="dark"] .site-body main .not-prose .overflow-x-auto {
   background: color-mix(in oklab, var(--site-surface-alt) 88%, #101720);
 }
@@ -588,5 +593,9 @@ body.site-body::after {
 
   .hero-panel {
     border-radius: 1.12rem;
+  }
+
+  .results-chart-note {
+    white-space: normal;
   }
 }
