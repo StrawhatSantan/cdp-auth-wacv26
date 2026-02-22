@@ -1,0 +1,328 @@
+---
+interface PipelineStep {
+  shortLabel: string;
+  title: string;
+  description: string;
+  focus: { x: number; y: number; w: number; h: number };
+}
+
+interface SampleProfile {
+  id: string;
+  observedIndex: number;
+  label: string;
+  classLabel: string;
+}
+
+interface Props {
+  image: ImageMetadata;
+  labels: string[];
+  matrix: number[][];
+}
+
+const { image, labels, matrix } = Astro.props;
+
+const steps: PipelineStep[] = [
+  {
+    shortLabel: "Conditioning Inputs",
+    title: "Step 1: Build Joint Conditioning",
+    description:
+      "The noised latent is conditioned with printed-CDP spatial features and printer-identity text features to expose both local texture and class semantics.",
+    focus: { x: 1, y: 5, w: 33, h: 54 },
+  },
+  {
+    shortLabel: "Noise Prediction",
+    title: "Step 2: Class-Conditioned Noise Prediction",
+    description:
+      "For each candidate class, the diffusion backbone predicts reconstruction noise conditioned on template latent, printed signal, and class context.",
+    focus: { x: 30, y: 11, w: 38, h: 45 },
+  },
+  {
+    shortLabel: "Class-Wise Error",
+    title: "Step 3: Compare Reconstruction Errors",
+    description:
+      "The model computes an error value per class and chooses the class with minimum denoising loss as the most likely source printer.",
+    focus: { x: 22, y: 65, w: 50, h: 11 },
+  },
+  {
+    shortLabel: "Authentication",
+    title: "Step 4: Decision Rule",
+    description:
+      "Authentication succeeds only if the predicted class matches the expected authentic printer; otherwise the sample is flagged as counterfeit.",
+    focus: { x: 72, y: 34, w: 25, h: 39 },
+  },
+];
+
+const sampleProfiles: SampleProfile[] = labels.map((label, index) => {
+  const normalized = label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const isAuthentic = !label.includes("_");
+  return {
+    id: `sample-${normalized}`,
+    observedIndex: index,
+    classLabel: label,
+    label: `${isAuthentic ? "Authentic sample" : "Counterfeit-like sample"}: ${label}`,
+  };
+});
+
+const authenticLabels = labels.filter((label) => !label.includes("_"));
+const defaultExpected = authenticLabels[0] ?? labels[0] ?? "HP55";
+---
+
+<div class="not-prose full-bleed px-6">
+  <section
+    class="pipeline-explorer mx-auto max-w-[74rem]"
+    data-pipeline-root
+    data-steps={JSON.stringify(steps)}
+    data-labels={JSON.stringify(labels)}
+    data-matrix={JSON.stringify(matrix)}
+    data-samples={JSON.stringify(sampleProfiles)}
+  >
+    <div class="pipeline-header">
+      <h4>Interactive Figure 2 Walkthrough</h4>
+      <p>
+        Click through the pipeline stages to highlight where each operation
+        happens in the architecture.
+      </p>
+    </div>
+
+    <div class="pipeline-layout">
+      <div class="pipeline-diagram-panel">
+        <div class="pipeline-image-frame">
+          <img
+            src={image.src}
+            width={image.width}
+            height={image.height}
+            alt="Interactive Figure 2: class-conditioned diffusion authentication pipeline"
+            loading="lazy"
+          />
+          <div class="pipeline-focus-box" data-focus-box></div>
+        </div>
+        <p class="pipeline-diagram-hint">
+          Highlight box follows the selected step.
+        </p>
+      </div>
+
+      <div class="pipeline-stepper-panel">
+        <div class="pipeline-step-buttons">
+          {
+            steps.map((step, index) => (
+              <button
+                type="button"
+                class={`pipeline-step-button ${index === 0 ? "is-active" : ""}`}
+                data-step-button={index}
+                aria-pressed={index === 0 ? "true" : "false"}
+              >
+                <span class="pipeline-step-index">{index + 1}</span>
+                <span class="pipeline-step-short">{step.shortLabel}</span>
+              </button>
+            ))
+          }
+        </div>
+        <div class="pipeline-step-detail">
+          <p class="pipeline-step-kicker" data-step-kicker>Step 1</p>
+          <h5 data-step-title>{steps[0]?.title}</h5>
+          <p data-step-description>{steps[0]?.description}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-simulator">
+      <div class="pipeline-simulator-header">
+        <h4>Inference Simulator</h4>
+        <p>
+          Class-wise loss proxy:
+          <code>proxy_loss = 1 - (confusion_score / 100)</code>. Lower is
+          better. This is for explanation only.
+        </p>
+      </div>
+
+      <div class="pipeline-simulator-controls">
+        <label>
+          Expected authentic printer
+          <select data-expected-select>
+            {authenticLabels.map((label) => (
+              <option value={label} selected={label === defaultExpected}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Observed sample profile
+          <select data-sample-select>
+            {sampleProfiles.map((sample, index) => (
+              <option value={sample.id} selected={index === 0}>
+                {sample.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div class="pipeline-simulator-body">
+        <div class="pipeline-loss-table">
+          {labels.map((label, index) => (
+            <div class="pipeline-loss-row" data-class-row data-class-index={index}>
+              <span class="pipeline-loss-label">{label}</span>
+              <div class="pipeline-loss-track">
+                <span class="pipeline-loss-fill" data-loss-fill></span>
+              </div>
+              <span class="pipeline-loss-value" data-loss-value>0.000</span>
+            </div>
+          ))}
+        </div>
+
+        <div class="pipeline-decision-card">
+          <p class="pipeline-decision-kicker">Decision</p>
+          <p class="pipeline-decision-state" data-decision-state>
+            Counterfeit
+          </p>
+          <p class="pipeline-decision-line">
+            Predicted class:
+            <strong data-predicted-class>{labels[0] ?? "HP55"}</strong>
+          </p>
+          <p class="pipeline-decision-line">
+            Expected class:
+            <strong data-expected-class>{defaultExpected}</strong>
+          </p>
+          <p class="pipeline-decision-line">
+            Observed profile:
+            <strong data-observed-class>{sampleProfiles[0]?.classLabel ?? "HP55"}</strong>
+          </p>
+          <p class="pipeline-decision-reason" data-decision-reason>
+            Predicted class does not match expected printer.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (() => {
+    const roots = document.querySelectorAll("[data-pipeline-root]");
+    roots.forEach((root) => {
+      const parseJSON = (attributeName, fallback) => {
+        const raw = root.getAttribute(attributeName);
+        if (!raw) return fallback;
+        try {
+          return JSON.parse(raw);
+        } catch {
+          return fallback;
+        }
+      };
+
+      const steps = parseJSON("data-steps", []);
+      const labels = parseJSON("data-labels", []);
+      const matrix = parseJSON("data-matrix", []);
+      const samples = parseJSON("data-samples", []);
+
+      const focusBox = root.querySelector("[data-focus-box]");
+      const stepButtons = Array.from(root.querySelectorAll("[data-step-button]"));
+      const stepKicker = root.querySelector("[data-step-kicker]");
+      const stepTitle = root.querySelector("[data-step-title]");
+      const stepDescription = root.querySelector("[data-step-description]");
+
+      const expectedSelect = root.querySelector("[data-expected-select]");
+      const sampleSelect = root.querySelector("[data-sample-select]");
+      const classRows = Array.from(root.querySelectorAll("[data-class-row]"));
+      const predictedClass = root.querySelector("[data-predicted-class]");
+      const expectedClass = root.querySelector("[data-expected-class]");
+      const observedClass = root.querySelector("[data-observed-class]");
+      const decisionState = root.querySelector("[data-decision-state]");
+      const decisionReason = root.querySelector("[data-decision-reason]");
+
+      const setStep = (index) => {
+        const step = steps[index] || steps[0];
+        if (!step) return;
+
+        stepButtons.forEach((button, buttonIndex) => {
+          const isActive = buttonIndex === index;
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-pressed", isActive ? "true" : "false");
+        });
+
+        if (focusBox && step.focus) {
+          focusBox.style.left = `${step.focus.x}%`;
+          focusBox.style.top = `${step.focus.y}%`;
+          focusBox.style.width = `${step.focus.w}%`;
+          focusBox.style.height = `${step.focus.h}%`;
+        }
+
+        if (stepKicker) stepKicker.textContent = `Step ${index + 1}`;
+        if (stepTitle) stepTitle.textContent = step.title;
+        if (stepDescription) stepDescription.textContent = step.description;
+      };
+
+      stepButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const index = Number(button.getAttribute("data-step-button") ?? "0");
+          setStep(Number.isNaN(index) ? 0 : index);
+        });
+      });
+
+      const runSimulation = () => {
+        if (!expectedSelect || !sampleSelect) return;
+        const expected = expectedSelect.value;
+        const sample = samples.find((item) => item.id === sampleSelect.value) || samples[0];
+        if (!sample) return;
+
+        const row = matrix[sample.observedIndex] || [];
+        const losses = labels.map((_, index) => {
+          const score = Number(row[index] ?? 0);
+          return Math.max(0.001, 1 - score / 100);
+        });
+
+        let minIndex = 0;
+        losses.forEach((value, index) => {
+          if (value < losses[minIndex]) {
+            minIndex = index;
+          }
+        });
+
+        classRows.forEach((rowElement) => {
+          const index = Number(rowElement.getAttribute("data-class-index") ?? "0");
+          const fill = rowElement.querySelector("[data-loss-fill]");
+          const value = rowElement.querySelector("[data-loss-value]");
+          const loss = losses[index] ?? 1;
+
+          if (fill) {
+            fill.style.width = `${Math.min(100, Math.max(1, loss * 100))}%`;
+          }
+          if (value) {
+            value.textContent = loss.toFixed(3);
+          }
+
+          rowElement.classList.toggle("is-best", index === minIndex);
+        });
+
+        const predicted = labels[minIndex] ?? "";
+        const isAuthentic = predicted === expected;
+
+        if (predictedClass) predictedClass.textContent = predicted;
+        if (expectedClass) expectedClass.textContent = expected;
+        if (observedClass) observedClass.textContent = sample.classLabel;
+        if (decisionState) decisionState.textContent = isAuthentic ? "Authentic" : "Counterfeit";
+
+        if (decisionReason) {
+          decisionReason.textContent = isAuthentic
+            ? "Predicted class matches expected printer."
+            : "Predicted class does not match expected printer.";
+        }
+
+        if (decisionState) {
+          decisionState.setAttribute("data-state", isAuthentic ? "authentic" : "counterfeit");
+        }
+      };
+
+      if (expectedSelect) {
+        expectedSelect.addEventListener("change", runSimulation);
+      }
+      if (sampleSelect) {
+        sampleSelect.addEventListener("change", runSimulation);
+      }
+
+      setStep(0);
+      runSimulation();
+    });
+  })();
+</script>

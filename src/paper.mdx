@@ -32,9 +32,9 @@ description: Diffusion-based CDP authentication with joint template, printed CDP
 import HighlightedSection from "./components/HighlightedSection.astro";
 import Figure from "./components/Figure.astro";
 import Picture from "./components/Picture.astro";
-import Wide from "./components/Wide.astro";
 import ResultsBarChart from "./components/ResultsBarChart.astro";
 import ConfusionMatrix from "./components/ConfusionMatrix.astro";
+import PipelineExplorer from "./components/PipelineExplorer.astro";
 
 import illustration from "./assets/illustration.png";
 import scheme from "./assets/scheme.png";
@@ -99,18 +99,7 @@ The left side starts from the binary template and authentic print. The right sid
 
 This pipeline takes the noised template latent and conditions denoising on both the printed CDP (spatial signal) and printer identity (class signal). The model predicts noise for each candidate class and selects the class with minimum reconstruction error, then authenticates only if the predicted class matches the expected source printer.
 
-<Wide>
-  <Figure>
-    <Picture
-      slot="figure"
-      src={scheme}
-      alt="Proposed diffusion-based authentication pipeline with class-conditioned noise prediction"
-    />
-    <Fragment slot="caption">
-      Proposed solution: class-conditioned denoising turns reconstruction quality into a robust authentication decision signal.
-    </Fragment>
-  </Figure>
-</Wide>
+<PipelineExplorer image={scheme} labels={confusionLabels} matrix={confusionMatrix} />
 
 <HighlightedSection>
 
