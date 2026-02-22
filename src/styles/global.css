@@ -536,6 +536,10 @@ body.site-body::after {
   padding: clamp(1.25rem, 3vw, 2rem);
 }
 
+.section-highlight-inner :where(p, ul, ol) {
+  max-width: none;
+}
+
 .figure-frame {
   margin-top: 1.45rem;
   margin-bottom: 1.85rem;
